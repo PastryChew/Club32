@@ -5,21 +5,20 @@ using UnityEngine.AI;
 
 public class CharacterController : MonoBehaviour
 {
-    private NavMeshAgent _agent;
-
-    [SerializeField] private GameObject _target;
     [SerializeField] private float _spawnRadius;
     [SerializeField] private GameObject _prefab;
     [SerializeField] private Transform _spawnPoint;
     [SerializeField]private Vector3 _volume;
-    private GameObject _obj;
     [SerializeField] private GameObject[] _objectsArr;
+    private NavMeshAgent _agent;
+    private GameObject _obj;
     private bool _isAllPoint;
     private bool _getAgentPoint;
+    private bool _getCoroutine;
+
     private void Start()
     {
         _agent = GetComponent<NavMeshAgent>();
-        //_agent.destination = _target.transform.position;
     }
 
     private void Update()
@@ -30,14 +29,19 @@ public class CharacterController : MonoBehaviour
         }
         if (!_getAgentPoint)
         {
-
             GetAgentPoint();
+            _getCoroutine = false;
+        }
+        if (_agent.remainingDistance < 1 && !_getCoroutine)
+        {
+            _getCoroutine = true;
+            StartCoroutine(WaitOnPoint());
         }
     }
 
     public void GetNewRandomPoint()
     {
-        int spawnCount = 6;
+        int spawnCount = 30;
         GameObject parent = new GameObject();
         _isAllPoint = true;
         for (int i = 0; i < spawnCount; i++)
@@ -48,15 +52,16 @@ public class CharacterController : MonoBehaviour
             _objectsArr[i] = _obj;
         }
     }
+
     public void GetAgentPoint()
     {
         _agent.destination = _objectsArr[Random.Range(0, _objectsArr.Length)].transform.position;
         _getAgentPoint = true;
-        
-        if (_agent.remainingDistance < 1)
-        {
-            _agent.destination = _objectsArr[Random.Range(0, _objectsArr.Length)].transform.position;
-            
-        }
+    }
+
+    IEnumerator WaitOnPoint()
+    {
+        yield return new WaitForSeconds(3f);
+        _getAgentPoint = false;
     }
 }
